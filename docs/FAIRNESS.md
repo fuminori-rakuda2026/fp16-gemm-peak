@@ -20,7 +20,7 @@ Two different quantities, never mixed in one column:
 
 | Column | Question it answers | How it is measured |
 |---|---|---|
-| **Peak** | How fast can this GPU's matrix instruction retire? | Small tile, operands in registers, repeated, timed on the GPU |
+| **Peak** | How much throughput can this GPU's matrix units reach? | Small tile, operands in registers, repeated, timed on the GPU |
 | **Achieved** | How much of its own specification does the hardware actually deliver? | Measured peak ÷ ceiling, both from the same definition |
 | **Library GEMM** | What do you get from the normal toolchain? | `measure_fp16.py` (cuBLAS / hipBLAS / MPS), same script everywhere |
 
