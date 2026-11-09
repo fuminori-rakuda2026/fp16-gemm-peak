@@ -20,7 +20,8 @@ the most common way a comparison goes wrong, so the tables here keep them apart.
 
 1. **The operation**: dense matrix multiply. Square shapes for the library path, one tile repeated
    for the peak path. No convolutions, no attention, no model.
-2. **The precision**: FP16 inputs, FP32 accumulation. FP8, FP4 and INT8 are out of scope here
+2. **The precision**: FP16 inputs, and the accumulator stated for every row. FP32 accumulate and f16
+   output are different measurements and are never averaged into one number. FP8, FP4 and INT8 are out of scope here
    precisely because their scale formats are vendor-specific and are not the same thing.
 3. **No sparsity.** Vendor headline numbers are often 2:4 sparse; those are double the dense rate.
 4. **No DRAM in the loop** for the peak path: operands stay in registers, so bandwidth does not
@@ -57,6 +58,11 @@ The formula is identical for every vendor; only the three inputs change. Two con
 - **Achieved %** is comparable across vendors: it says how close the silicon comes to its own paper
   number. 98% on one device and 74% on another is a meaningful statement about each device.
 
+**Same formula is not the same confidence.** One denominator rests on a clock measured during the run;
+the other rests on an assumed clock, and on a per-core rate Apple does not publish. Both rows are shown,
+but a 97.9% and a 97.7% do not carry equal weight, and a percentage built on an estimate should not be
+used to rank two devices.
+
 Every row in [`results/ceiling.csv`](../results/ceiling.csv) carries the clock value **and where it
 came from**. A row whose clock was not measured is marked `estimated`, and its achieved rate is
 correspondingly weaker evidence. The Apple row is currently of that kind: Apple publishes neither
@@ -86,8 +92,12 @@ Use this as a checklist before adding a row:
 
 ## 7. Known weaknesses of the current data
 
-- The Apple clock (1.57 GHz) is an assumption, not a measurement. If it is 1.6 GHz, that device's
-  ceiling is 131.1 and its achieved rate is 98.0% instead of 99.9%.
+- The Apple clock (1.57 GHz) is an assumption, not a measurement. If it is 1.6 GHz, the ceiling becomes
+  131.1 and the achieved rate of the f16-out row falls from 99.9% to 98.0%.
+- It is **not established** that the Apple f16-output path accumulates in FP32. That is why the
+  comparable pair is the two FP32-accumulate rows (125.7 vs 105.3), and the f16-output row is reported
+  on its own.
+- The CUDA peak checks correctness at `repeats=1` (one tile), not after the long repetition loop.
 - Only two devices have a measured peak. The other rows in the README table are derived values,
   labelled as such.
 - No power or energy numbers. A rate per watt would change the ranking, and it is not measured here.

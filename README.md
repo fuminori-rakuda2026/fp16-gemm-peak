@@ -18,10 +18,15 @@ ceiling formula for every device, while absolute TFLOPS still carry the differen
 
 FP16 dense, one GPU, no sparsity. Both are peaks over a parameter sweep, not averages.
 
-| Device | TFLOPS | Best shape | Notes |
+| Device | Output / accumulator | TFLOPS | Best shape |
 |---|---|---|---|
-| Apple M5 Ultra, 80-core GPU | **128.5** | 32×32×128 | f16 in, f16 out, Metal tensor ops |
-| NVIDIA GB10 (DGX Spark), 48 SM | **105.3** | 16×16×16 tile, repeats | f16 in, f32 accumulate, SM clock 2.19 GHz |
+| NVIDIA GB10 (DGX Spark), 48 SM | FP32 accumulate | **105.3** | 16×16×16 tile, repeats |
+| Apple M5 Ultra, 80-core GPU | FP32 accumulate | **125.7** | 16×32×128 |
+| Apple M5 Ultra, 80-core GPU | f16 output | **128.5** | 32×32×128 |
+
+**Compare like with like.** The two FP32-accumulate rows are the comparable pair: 125.7 vs 105.3, so the
+Apple part is about 19% higher. The 128.5 row uses an f16 output path; on this Apple stack it is not
+established that the accumulation itself is FP32, so it is reported separately rather than mixed in.
 
 ### Ceiling and achieved rate
 
@@ -34,11 +39,14 @@ ceiling = units x FLOP per unit per clock x clock        (dense FP16, no sparsit
 
 | Device | Units | FLOP/unit/clk | Clock | Ceiling | Measured | Achieved |
 |---|---|---|---|---|---|---|
-| GB10, 48 SM | 48 | 1024 | 2.19 GHz (measured) | 107.6 | 105.3 | 97.9% |
-| M5 Ultra, 80-core GPU | 80 | 1024 | 1.57 GHz (estimated) | 128.6 | 128.5 | 99.9% |
+| GB10, 48 SM | 48 | 1024 | 2.19 GHz (measured) | 107.6 | 105.3 (fp32) | 97.9% |
+| M5 Ultra, 80-core GPU | 80 | 1024 | 1.57 GHz (estimated) | 128.6 | 125.7 (fp32) | 97.7% |
+| M5 Ultra, 80-core GPU | 80 | 1024 | 1.57 GHz (estimated) | 128.6 | 128.5 (f16 out) | 99.9% (weak) |
 
-The **achieved rate** is the comparable column: same definition on every vendor, and it says how much
-of its own paper specification the hardware actually delivers. The absolute TFLOPS are still useful,
+The **achieved rate** is comparable in definition, but not in confidence: the GB10 clock was measured
+during the run, while the Apple clock is an assumption. A percentage built on an estimated clock is
+weaker evidence, and the last row above is the weakest of the three because both its clock and its
+accumulator are unconfirmed. The absolute TFLOPS are still useful,
 but read them knowing that one instruction covers 16x16x16 on GB10 and 32x32x128 on Apple.
 
 The Apple clock is the weak link: Apple publishes neither the matrix rate nor the GPU clock, so the
