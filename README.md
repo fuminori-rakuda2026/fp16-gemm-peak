@@ -19,6 +19,29 @@ FP16 dense, one GPU, no sparsity. Both are peaks over a parameter sweep, not ave
 | Apple M5 Ultra, 80-core GPU | **128.5** | 32×32×128 | f16 in, f16 out, Metal tensor ops |
 | NVIDIA GB10 (DGX Spark), 48 SM | **105.3** | 16×16×16 tile, repeats | f16 in, f32 accumulate, SM clock 2.19 GHz |
 
+### Ceiling and achieved rate
+
+Absolute TFLOPS hide a difference in instruction shape, so each result is also given against the
+ceiling of its own hardware:
+
+```
+ceiling = units x FLOP per unit per clock x clock        (dense FP16, no sparsity)
+```
+
+| Device | Units | FLOP/unit/clk | Clock | Ceiling | Measured | Achieved |
+|---|---|---|---|---|---|---|
+| GB10, 48 SM | 48 | 1024 | 2.19 GHz (measured) | 107.6 | 105.3 | 97.9% |
+| M5 Ultra, 80-core GPU | 80 | 1024 | 1.57 GHz (estimated) | 128.6 | 128.5 | 99.9% |
+
+The **achieved rate** is the comparable column: same definition on every vendor, and it says how much
+of its own paper specification the hardware actually delivers. The absolute TFLOPS are still useful,
+but read them knowing that one instruction covers 16x16x16 on GB10 and 32x32x128 on Apple.
+
+The Apple clock is the weak link: Apple publishes neither the matrix rate nor the GPU clock, so the
+ceiling above assumes 1.57 GHz from the core count. If the real clock is 1.6 GHz, the ceiling becomes
+131.1 and the achieved rate 98.0%. Rows are marked `estimated` in
+[`results/ceiling.csv`](results/ceiling.csv) whenever the clock was not measured.
+
 For comparison, a library GEMM on the same GB10 (cuBLAS via PyTorch, 16384³, 50 iterations)
 gives **99.4 TFLOPS**, i.e. 94% of the peak above. `dgx/measure_fp16.py` reproduces it.
 

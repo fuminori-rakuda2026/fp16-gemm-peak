@@ -1,0 +1,5 @@
+# FP16 dense ceiling = units x FLOP per unit per clock x clock, and the measured peak against it.
+# Add a row per GPU. The clock source must be stated; "estimated" rows are weaker evidence.
+device,units,flop_per_unit_per_clock,clock_ghz,clock_source,ceiling_tflops,measured_peak_tflops,achieved_pct
+gb10-48sm,48,1024,2.19,"measured 2164-2177 MHz during the run (cap 2200)",107.6,105.3,97.9
+apple-m5-ultra-80core,80,1024,1.57,"estimated: Apple publishes no matrix rate or clock; value assumed",128.6,128.5,99.9
