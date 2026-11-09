@@ -78,10 +78,10 @@ The formula is identical for every vendor; only the three inputs change. Two con
 - **Achieved %** is comparable across vendors: it says how close the silicon comes to its own paper
   number. 98% on one device and 74% on another is a meaningful statement about each device.
 
-**Same formula is not the same confidence.** One denominator rests on a clock measured during the run;
-the other rests on an assumed clock, and on a per-core rate Apple does not publish. Both rows are shown,
-but a 97.9% and a 97.7% do not carry equal weight, and a percentage built on an estimate should not be
-used to rank two devices.
+**Same formula, same kind of denominator.** Both clocks are read off the running device, so the two
+achieved rates rest on measurements of the same kind. What is still documentation rather than
+measurement is the FLOPs-per-core-per-clock figure, and it is the same number on both rows; if it is
+wrong, it is wrong for both.
 
 Every row in [`results/ceiling.csv`](../results/ceiling.csv) carries the clock value **and where it
 came from**. A row whose clock was not measured is marked `estimated`, and its achieved rate is
@@ -112,8 +112,12 @@ Use this as a checklist before adding a row:
 
 ## 7. Known weaknesses of the current data
 
-- The Apple clock (1.57 GHz) is an assumption, not a measurement. If it is 1.6 GHz, the ceiling becomes
-  131.1 and the achieved rate of the f16-out row falls from 99.9% to 98.0%.
+- The Apple clock is measured, not assumed: `powermetrics --samplers gpu_power` reports 1617–1619 MHz
+  while the harness runs, so the ceiling is 132.5 and the achieved rates are 94.8% (FP32 accumulate)
+  and 97.0% (f16 output). An earlier revision of this page used an assumed 1.57 GHz; the measurement
+  moved that device's ceiling up by 3% and its achieved rate down.
+- The per-clock rate of 1024 FLOPs per core is still documentation, not measurement. It is the same
+  assumption on both devices, but it is an assumption.
 - It is **not established** that the Apple f16-output path accumulates in FP32. That is why the
   comparable pair is the two FP32-accumulate rows (125.7 vs 105.3), and the f16-output row is reported
   on its own.

@@ -31,14 +31,17 @@ its accumulation is FP32, so it is listed separately rather than mixed in.
 
 Against each device's own ceiling (`units × FLOP per unit per clock × clock`):
 
-| Device | Ceiling | Measured | Achieved | Clock source |
-|---|---|---|---|---|
-| GB10, 48 SM | 107.6 | 105.3 | 97.9% | measured, 2.19 GHz |
-| M5 Ultra, 80-core GPU | 128.6 | 125.7 | 97.7% | **estimated** 1.57 GHz |
+| Device | Output | Ceiling | Measured | Achieved | Clock |
+|---|---|---|---|---|---|
+| GB10, 48 SM | FP32 acc | 107.6 | 105.3 | 97.8% | 2.19 GHz, measured during the run |
+| M5 Ultra, 80-core | FP32 acc | 132.5 | 125.7 | 94.8% | 1.618 GHz, measured under load |
+| M5 Ultra, 80-core | f16 out | 132.5 | 128.5 | 97.0% | 1.618 GHz, measured under load |
 
-The achieved column compares definitions, not confidence: the GB10 clock was measured during the run,
-the Apple clock is an assumption (Apple publishes neither the matrix rate nor the GPU clock). Raw
-runs: [`results/fp16-peak.csv`](results/fp16-peak.csv), [`results/ceiling.csv`](results/ceiling.csv).
+Both clocks are read off the running device, not from a data sheet: `nvidia-smi`-style clock reporting
+on the GB10, and `powermetrics --samplers gpu_power` on the Apple part (1617–1619 MHz, stable under
+load). The Apple per-clock rate of 1024 FLOPs per core is the one number still taken from documentation
+rather than measured. Raw runs: [`results/fp16-peak.csv`](results/fp16-peak.csv),
+[`results/ceiling.csv`](results/ceiling.csv).
 
 A normal library call on the same GB10 (cuBLAS via PyTorch, 16384³, 50 iterations) gives **99.4
 TFLOPS**, 94% of the peak above — the toolchain leaves a little on the table, which is the kind of
