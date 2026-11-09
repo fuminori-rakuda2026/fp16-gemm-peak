@@ -1,24 +1,21 @@
 # FP16 dense peak on GB10 and Apple GPUs
 
-> **A tap turned fully open, with the hose, the nozzle and the bucket taken off.** What comes out is
-> the water source's own maximum — not what a garden hose delivers at the far end. This repository
-> does that to a GPU's matrix instruction, and reports both the litres per minute and the percentage
-> of each tap's rated capacity.
+**Purpose.** Measure the maximum throughput of a GPU's matrix-compute units, one GPU at a time,
+independently of model architecture, inference engine and quantisation recipe.
 
-**Purpose.** Measure how fast a GPU's matrix instruction can retire, on one GPU at a time, so that a
-number can be read as *hardware capability* rather than as the quality of a model, an engine or a
-quantisation recipe.
+Think of it as measuring a tap's maximum flow with the hose taken off: what is measured is the
+source's own limit, not what the plumbing delivers at the far end.
 
-**Method, in one paragraph.** Take the same mathematical operation on every device — dense FP16
-matrix multiply, FP32 accumulate, no sparsity — keep the operands in registers so DRAM never decides
-the result, repeat it on the GPU, check the output against a CPU reference, and only then divide
-FLOPs by time. Two devices rarely have the same tap (one instruction covers 16×16×16, another
-32×32×128), which is why results are also given as a percentage of each device's own rated ceiling.
+**Method.** All tests use dense FP16 matrix operations without sparsity; accumulation and output
+precision are identified separately for each result. The operands are kept in registers so DRAM never
+decides the result, the same matrix multiply is repeated on the GPU, the output is checked against a
+CPU reference, and only then are FLOPs divided by time. Two devices rarely have the same tap — one
+instruction covers 16×16×16, another 32×32×128 — which is why results are also given as a percentage
+of each device's own rated ceiling.
 
-**Why this shape.** A library GEMM number mixes the silicon with the library, and a tokens-per-second
-number mixes it with the model. Both are useful and both are measured elsewhere; this repository
-isolates the layer underneath so that "the hardware cannot go faster" and "the software is leaving
-performance on the table" can be told apart.
+**Why measure the peak at all.** A library GEMM number mixes the silicon with the library, and a
+tokens-per-second number mixes it with the model. This repository isolates the layer underneath, so
+that the hardware's measured compute limit and the software's distance from it can be told apart.
 
 ## Results
 
@@ -40,16 +37,14 @@ Against each device's own ceiling (`units × FLOP per unit per clock × clock`):
 | M5 Ultra, 80-core | FP32 acc | 132.5 | 125.7 | 94.8% | 1.618 GHz, measured under load |
 | M5 Ultra, 80-core | f16 out | 132.5 | 128.5 | 97.0% | 1.618 GHz, measured under load |
 
-Both clocks are read off the running device, not from a data sheet: clock reporting through the driver
-on the GB10, and `powermetrics --samplers gpu_power` on the Apple part (1617–1619 MHz, stable under
-load). The one number still taken from documentation rather than measured is 1024 FLOPs per core per
+Both GPU clocks were measured under load, not taken from a data sheet: clock reporting through the
+driver on the GB10, and `powermetrics --samplers gpu_power` on the M5 Ultra (1617–1619 MHz). The one number still taken from documentation rather than measured is 1024 FLOPs per core per
 clock, on both rows — so read the achieved column as "consistent with the published rate", not as a
 proof of it. Raw runs: [`results/fp16-peak.csv`](results/fp16-peak.csv),
 [`results/ceiling.csv`](results/ceiling.csv).
 
 A normal library call on the same GB10 (cuBLAS via PyTorch, 16384³, 50 iterations) gives **99.4
-TFLOPS**, 94% of the peak above — the toolchain leaves a little on the table, which is the kind of
-question the peak exists to answer.
+TFLOPS**, approximately 94% of the measured peak — the kind of gap the peak exists to expose.
 
 ## Run it yourself
 

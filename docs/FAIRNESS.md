@@ -1,27 +1,18 @@
 # Why these numbers can be compared
 
-## The short version: a tap with the hose removed
-
-Open a tap fully, take the hose, the nozzle and the bucket off, and measure how much water leaves the
-tap per minute. That is the source's own maximum. Put the hose back and you get less — that is what an
-application sees, and it depends on the plumbing rather than on the tap.
-
-This repository measures the tap, not the plumbing:
+This repository measures the tap, not the plumbing. The definitions and the measurement conditions
+follow; the analogy itself is in the [README](../README.md).
 
 | Faucet | Here |
 |---|---|
 | Tap fully open | The matrix instruction issued back to back |
-| Hose and nozzle removed | Operands in registers, no DRAM traffic, no library overhead |
+| Hose removed | Operands in registers, no DRAM traffic, no library overhead |
 | Litres per minute | TFLOPS, FLOPs = 2·M·N·K |
 | The tap's rated capacity | units × FLOP per unit per clock × clock |
 | Percentage of rated capacity | The achieved column |
 
-Two machines rarely have the same tap: one instruction covers 16×16×16, another 32×32×128. Reporting
-only litres per minute therefore mixes "how big the tap is" with "how well it was opened". Reporting the
-percentage of each tap's own rating separates the two — and that is the column to compare across vendors.
-
 A GPU comparison is only worth reading if you know what was held constant and what was not.
-The rest of this page states both, then gives the rule for adding another GPU.
+This page states both, then gives the rule for adding another GPU.
 
 ## 1. What is being compared
 
@@ -75,13 +66,14 @@ The formula is identical for every vendor; only the three inputs change. Two con
 
 - **Absolute TFLOPS** carry the instruction-shape difference and should be read as "what this
   hardware does", not "which hardware is better".
-- **Achieved %** is comparable across vendors: it says how close the silicon comes to its own paper
+- **Achieved %** uses one normalisation formula on every vendor: it says how close the silicon comes to
+  its own paper
   number. 98% on one device and 74% on another is a meaningful statement about each device.
 
-**Same formula, same kind of denominator.** Both clocks are read off the running device, so the two
-achieved rates rest on measurements of the same kind. What is still documentation rather than
-measurement is the FLOPs-per-core-per-clock figure, and it is the same number on both rows; if it is
-wrong, it is wrong for both.
+**Same normalization formula.** Both GPU clocks were measured under load, so the two achieved rates
+rest on measurements of the same kind. What is still documentation rather than measurement is the
+FLOPs-per-core-per-clock figure, and it is the same number on both rows; if it is wrong, it is wrong
+for both.
 
 Every row in [`results/ceiling.csv`](../results/ceiling.csv) carries the clock value **and where it
 came from**. A row whose clock was not measured is marked `estimated`, and its achieved rate is
