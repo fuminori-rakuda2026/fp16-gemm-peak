@@ -24,6 +24,25 @@ gives **99.4 TFLOPS**, i.e. 94% of the peak above. `dgx/measure_fp16.py` reprodu
 
 Raw runs: [`results/fp16-peak.csv`](results/fp16-peak.csv).
 
+## Run it on your GPU
+
+`measure_fp16.py` uses whatever PyTorch backend the machine has, so the same command works on
+NVIDIA (cuBLAS), AMD (ROCm/hipBLAS), Apple (MPS) and CPU. That makes it the one number that can be
+compared across vendors without arguing about instruction shapes.
+
+```bash
+pip install torch          # once
+python3 measure_fp16.py --sizes 4096,8192,16384
+```
+
+It prints a CSV block with `mean_tflops` (includes thermal throttling) and `best_tflops`.
+Post the block in a [GPU result issue](../../issues/new?template=gpu-result.md) — or open a PR that
+appends it to `results/community.csv`. Include the `#` line; it carries the torch version and the
+clock/thermal reading.
+
+Notes: 16384 needs about 1 GB per matrix in FP16. On a small card use `--sizes 4096,8192`, and say
+so in the issue.
+
 ## Running
 
 CUDA side:

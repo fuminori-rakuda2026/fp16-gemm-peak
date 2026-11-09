@@ -1,0 +1,3 @@
+# Community measurements are appended here by PRs from issues.
+device,backend,M,N,K,mean_tflops,best_tflops
+apple-m2-ultra-76core,mps,4096,4096,4096,22.43,23.16
