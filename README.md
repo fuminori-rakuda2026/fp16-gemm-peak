@@ -101,4 +101,6 @@ python3 dgx/measure_fp16.py --iters 50 --warmup 15 --sizes 4096,8192,16384
 - Clocks matter. The GB10 numbers come from a run with the SM clock capped at 2200 MHz
   (measured 2.19 GHz during the run). Apple GPUs expose no user clock control, so the Apple figure
   depends on the thermal state; run it on an idle machine.
-- Integer paths are out of scope here. This repository keeps FP16 only.
+- Integer and 4-bit paths are out of scope here. FP4 is not one format but at least three
+  (NVFP4, MXFP4, unscaled E2M1), each with a different scale layout, so a shared TFLOPS column would
+  compare different arithmetic. [`docs/FAIRNESS.md` §8](docs/FAIRNESS.md) spells this out.

@@ -92,3 +92,32 @@ Use this as a checklist before adding a row:
   labelled as such.
 - No power or energy numbers. A rate per watt would change the ranking, and it is not measured here.
 - The library column shows the toolchain, not the silicon: MPS and cuBLAS are not equally mature.
+
+## 8. Formats this repository deliberately leaves out
+
+The word FP4 covers at least three different numerical systems, and they are not interchangeable:
+
+| Format | Element | Scale | Where it exists |
+|---|---|---|---|
+| NVFP4 | E2M1 | per-16 elements, E4M3 (plus a global scale in practice) | NVIDIA Blackwell |
+| MXFP4 | E2M1 | per-32 elements, E8M0 (power of two) | OCP standard, several vendors |
+| "FP4" unscaled | E2M1 | none | some Apple MPP paths |
+
+A TFLOPS figure means different arithmetic depending on which row of that table produced it, so putting
+them in one column would be the exact mistake this document is meant to prevent.
+
+Two further problems make a cross-vendor FP4 table dishonest rather than merely imprecise:
+
+1. **Scale handling dominates the result.** A block scale is a lookup and a multiply per block; whether
+   the kernel reads it as E4M3 or E8M0, and how often, changes the rate. Our own measurement of an
+   unscaled E2M1 path came out *below* FP16 on the same device, while a block-scaled path on the other
+   device came out several times above it. That contrast is a statement about two different paths, not
+   about two pieces of silicon.
+2. **Many GPUs have no FP4 instruction at all.** Ada and Ampere generations, and the Intel Arc Pro
+   series in this table, expose no FP4 path; their 4-bit work is done by dequantising in software.
+   A blank cell there is information, but it is not a rate.
+
+If you want a 4-bit comparison, state all of: element format, scale format and block size, whether a
+global scale was applied, and the kernel that ran. Without those four, the number does not mean
+anything comparable. This is why the repository reports FP16 only, and why the FP16 column carries a
+measured ceiling for each device.
