@@ -1,0 +1,7 @@
+# FP16 dense peak, one GPU, no sparsity. 2026-11-07 / 2026-11-08.
+# Apple: Metal 4 tensor ops, f16 in -> f16 out, best shape 32x32x128.
+# GB10: CUDA WMMA 16x16x16 tile repeated per warp, f16 in -> f32 accumulate, SM clock 2.19 GHz.
+device,input,output,M,N,K,tflops,note
+apple-m5-ultra-80core,f16,f16,32,32,128,128.53,sweep peak (8..32 x 8..32 x 8..128)
+apple-m5-ultra-80core,f16,f32,16,32,128,125.70,sweep peak
+gb10-48sm,f16,f32,16,16,16,n/a,105.27,fixed tile repeated; sample peaks 105.11 / 105.10 / 105.27
