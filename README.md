@@ -7,10 +7,10 @@ quantisation recipe.
 **Method, in one paragraph.** Take the same mathematical operation on every device — dense FP16
 matrix multiply, FP32 accumulate, no sparsity — keep the operands in registers so DRAM never decides
 the result, repeat it on the GPU, check the output against a CPU reference, and only then divide
-FLOPs by time. That is a tap turned fully open with the hose removed: the source's own maximum, not
-what a garden hose delivers at the far end. Two devices rarely have the same tap (one instruction
-covers 16×16×16, another 32×32×128), so the results are reported both as TFLOPS and as a percentage of
-each device's own rated ceiling.
+FLOPs by time. That is a tap turned fully open with the hose removed — the source's own maximum, not
+what the hose delivers at the far end. Two devices rarely have the same tap (one instruction covers
+16×16×16, another 32×32×128), so results are also given as a percentage of each device's own rated
+ceiling.
 
 **Why this shape.** A library GEMM number mixes the silicon with the library, and a tokens-per-second
 number mixes it with the model. Both are useful and both are measured elsewhere; this repository
@@ -37,17 +37,18 @@ Against each device's own ceiling (`units × FLOP per unit per clock × clock`):
 | M5 Ultra, 80-core | FP32 acc | 132.5 | 125.7 | 94.8% | 1.618 GHz, measured under load |
 | M5 Ultra, 80-core | f16 out | 132.5 | 128.5 | 97.0% | 1.618 GHz, measured under load |
 
-Both clocks are read off the running device, not from a data sheet: `nvidia-smi`-style clock reporting
+Both clocks are read off the running device, not from a data sheet: clock reporting through the driver
 on the GB10, and `powermetrics --samplers gpu_power` on the Apple part (1617–1619 MHz, stable under
-load). The Apple per-clock rate of 1024 FLOPs per core is the one number still taken from documentation
-rather than measured. Raw runs: [`results/fp16-peak.csv`](results/fp16-peak.csv),
+load). The one number still taken from documentation rather than measured is 1024 FLOPs per core per
+clock, on both rows — so read the achieved column as "consistent with the published rate", not as a
+proof of it. Raw runs: [`results/fp16-peak.csv`](results/fp16-peak.csv),
 [`results/ceiling.csv`](results/ceiling.csv).
 
 A normal library call on the same GB10 (cuBLAS via PyTorch, 16384³, 50 iterations) gives **99.4
 TFLOPS**, 94% of the peak above — the toolchain leaves a little on the table, which is the kind of
 question the peak exists to answer.
 
-## Wheels already on the bus
+## Run it yourself
 
 Run it on your own GPU:
 
