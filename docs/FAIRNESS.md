@@ -1,0 +1,94 @@
+# Why these numbers can be compared
+
+A GPU comparison is only worth reading if you know what was held constant and what was not.
+This page states both, then gives the rule for adding another GPU.
+
+## 1. What is being compared
+
+Two different quantities, never mixed in one column:
+
+| Column | Question it answers | How it is measured |
+|---|---|---|
+| **Peak** | How fast can this GPU's matrix instruction retire? | Small tile, operands in registers, repeated, timed on the GPU |
+| **Achieved** | How much of its own specification does the hardware actually deliver? | Measured peak ÷ ceiling, both from the same definition |
+| **Library GEMM** | What do you get from the normal toolchain? | `measure_fp16.py` (cuBLAS / hipBLAS / MPS), same script everywhere |
+
+A peak and a library number answer different questions. Putting them side by side without labels is
+the most common way a comparison goes wrong, so the tables here keep them apart.
+
+## 2. What is held constant on every device
+
+1. **The operation**: dense matrix multiply. Square shapes for the library path, one tile repeated
+   for the peak path. No convolutions, no attention, no model.
+2. **The precision**: FP16 inputs, FP32 accumulation. FP8, FP4 and INT8 are out of scope here
+   precisely because their scale formats are vendor-specific and are not the same thing.
+3. **No sparsity.** Vendor headline numbers are often 2:4 sparse; those are double the dense rate.
+4. **No DRAM in the loop** for the peak path: operands stay in registers, so bandwidth does not
+   decide the result.
+5. **Correctness before speed**: every peak run checks its output against a scalar or CPU reference
+   and reports the error. A number is not reported when the check fails.
+6. **Same arithmetic for the score**: FLOPs = 2·M·N·K, no per-vendor adjustments.
+7. **Warmup excluded, same statistics**: warmup iterations are dropped, then mean and best are both
+   reported. The mean includes thermal throttling; the best is the burst rate.
+
+## 3. What necessarily differs, and why that is acceptable
+
+| Difference | Why it is unavoidable | Which direction it pushes |
+|---|---|---|
+| Instruction shape (16×16×16 on GB10 vs 32×32×128 on Apple) | Each vendor defines its own matrix instruction; there is no common ISA | A larger tile amortises issue overhead better, so it can flatter the larger-tile device |
+| API (CUDA WMMA vs Metal tensor ops) | Vendor-specific by definition | Newer APIs are less battle-tested |
+| Clock control | Apple exposes none; NVIDIA and AMD do | A device whose clock can be pinned looks more stable |
+| Library maturity (cuBLAS vs MPS vs hipBLAS) | Out of the hardware's control | Shown separately in the library column |
+
+None of these change the arithmetic of the **achieved** column, because that column divides by a
+ceiling computed with the same formula for every device. That is the point of normalising.
+
+## 4. The ceiling, and why it makes the comparison fair
+
+```
+ceiling_tflops  = units × FLOP per unit per clock × clock_ghz / 1000
+achieved_pct    = measured_peak_tflops ÷ ceiling_tflops × 100
+```
+
+The formula is identical for every vendor; only the three inputs change. Two consequences:
+
+- **Absolute TFLOPS** carry the instruction-shape difference and should be read as "what this
+  hardware does", not "which hardware is better".
+- **Achieved %** is comparable across vendors: it says how close the silicon comes to its own paper
+  number. 98% on one device and 74% on another is a meaningful statement about each device.
+
+Every row in [`results/ceiling.csv`](../results/ceiling.csv) carries the clock value **and where it
+came from**. A row whose clock was not measured is marked `estimated`, and its achieved rate is
+correspondingly weaker evidence. The Apple row is currently of that kind: Apple publishes neither
+the matrix rate nor the GPU clock.
+
+## 5. What would make a comparison unfair
+
+Use this as a checklist before adding a row:
+
+- [ ] Sparse and dense results in the same column
+- [ ] FP4/FP8/INT8 mixed with FP16 (different scale formats, different arithmetic)
+- [ ] A peak measured at 4096³ compared with a library number at 128³
+- [ ] Best-of-N on one device and mean on another
+- [ ] A ceiling taken from a vendor AI-TOPS figure that assumes sparsity
+- [ ] A clock that was neither measured nor labelled estimated
+- [ ] Thermal throttling hidden by reporting only the burst value
+- [ ] A result reported before its correctness check passed
+
+## 6. Adding your own GPU
+
+1. `python3 measure_fp16.py --sizes 4096,8192,16384` — one command, any backend.
+2. Add a row to [`results/ceiling.csv`](../results/ceiling.csv): units, FLOP per unit per clock,
+   clock and its source, then your measured peak and the achieved rate.
+3. If you also have a peak harness for your vendor, say which instruction shape it used.
+4. Open an issue with the block, or a PR that appends the row. Mark `estimated` anything you did not
+   measure directly.
+
+## 7. Known weaknesses of the current data
+
+- The Apple clock (1.57 GHz) is an assumption, not a measurement. If it is 1.6 GHz, that device's
+  ceiling is 131.1 and its achieved rate is 98.0% instead of 99.9%.
+- Only two devices have a measured peak. The other rows in the README table are derived values,
+  labelled as such.
+- No power or energy numbers. A rate per watt would change the ranking, and it is not measured here.
+- The library column shows the toolchain, not the silicon: MPS and cuBLAS are not equally mature.

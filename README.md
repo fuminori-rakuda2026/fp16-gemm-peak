@@ -4,6 +4,10 @@ Two standalone harnesses that measure the **FP16 dense** rate of the matrix inst
 on one GPU at a time. Operands stay in registers, so DRAM bandwidth does not decide the number,
 and every result is checked against a scalar reference before timing is trusted.
 
+**Why these numbers can be compared, what is held constant, and what is not:**
+[`docs/FAIRNESS.md`](docs/FAIRNESS.md). The short version is that the *achieved* column uses one
+ceiling formula for every device, while absolute TFLOPS still carry the difference in instruction shape.
+
 | Path | Target | What it does |
 |---|---|---|
 | `dgx/gemm_peak.cu` | NVIDIA GB10 (CUDA, WMMA) | 16×16×16 FP16→FP32 tile repeated R times per warp |
