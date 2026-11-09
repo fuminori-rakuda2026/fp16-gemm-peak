@@ -92,3 +92,13 @@ error. A peak harness that does not build is a gap in this repository, not a mis
 
 **What is held constant, what is not, and the checklist for adding a GPU:**
 [`docs/FAIRNESS.md`](docs/FAIRNESS.md).
+
+## Scope and upkeep
+
+This is a personal measurement that got cleaned up enough to publish, not a product. It is published so
+that the numbers can be checked and repeated, not because there is a roadmap behind it.
+
+- Issues are read as data: a result on another GPU, or a build failure with the device and the command.
+- There is no promise of a fix, a reply time, or a new feature. A pull request is welcome; silence is the
+  default and means only that.
+- The numbers will age. Toolchains, drivers and clocks move; a row without a date is a row to trust less.
