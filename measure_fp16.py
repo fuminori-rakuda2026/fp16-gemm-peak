@@ -64,7 +64,15 @@ def device_name(dev: torch.device) -> str:
         except Exception:
             pass
         return (chip or "Apple GPU") + " (" + platform.machine() + ")"
-    return platform.processor() or "CPU"
+    if sys.platform == "darwin":
+        try:
+            brand = subprocess.run(["sysctl", "-n", "machdep.cpu.brand_string"],
+                                   capture_output=True, text=True, timeout=5).stdout.strip()
+            if brand:
+                return brand + " (CPU)"
+        except Exception:
+            pass
+    return (platform.processor() or "CPU") + " (CPU)"
 
 
 def clock_note() -> str:
@@ -85,6 +93,11 @@ def clock_note() -> str:
     except Exception:
         pass
     return ""
+
+
+def fmt_tflops(value: float) -> float:
+    """Two decimals above 1 TFLOPS, three significant digits below, so a CPU is not 0.00."""
+    return round(value, 2) if value >= 1 else float(f"{value:.3g}")
 
 
 def bench(fn, iters: int, warmup: int) -> tuple[float, float]:
@@ -115,8 +128,15 @@ def main() -> int:
     ap.add_argument("--json", action="store_true")
     args = ap.parse_args()
 
-    dev = pick_device(args.device)
-    name = device_name(dev)
+    try:
+        dev = pick_device(args.device)
+        name = device_name(dev)
+    except (AssertionError, RuntimeError) as exc:
+        have = [b for b, ok in (("cuda", torch.cuda.is_available()),
+                                ("mps", bool(getattr(torch.backends, "mps", None)) and torch.backends.mps.is_available()))
+                if ok]
+        sys.exit(f"device '{args.device}' is not usable here: {exc}\n"
+                 f"available on this machine: {', '.join(have) or 'cpu only'}")
     note = clock_note()
     rows = []
     for size in [int(x) for x in args.sizes.split(",")]:
@@ -129,8 +149,8 @@ def main() -> int:
                 "device": name,
                 "backend": dev.type,
                 "M": size, "N": size, "K": size,
-                "mean_tflops": round(flops / mean_s / 1e12, 2),
-                "best_tflops": round(flops / best_s / 1e12, 2),
+                "mean_tflops": fmt_tflops(flops / mean_s / 1e12),
+                "best_tflops": fmt_tflops(flops / best_s / 1e12),
             })
             del a, b
         except Exception as exc:  # OOM on a small GPU is a result too
