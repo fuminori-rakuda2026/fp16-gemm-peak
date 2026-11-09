@@ -8,6 +8,7 @@ and every result is checked against a scalar reference before timing is trusted.
 |---|---|---|
 | `dgx/gemm_peak.cu` | NVIDIA GB10 (CUDA, WMMA) | 16×16×16 FP16→FP32 tile repeated R times per warp |
 | `m5/*.swift` | Apple M-series (Metal 4 tensor ops) | m×n×k sweep with FP16 in, FP16/FP32 out |
+| `dgx/measure_fp16.py` | NVIDIA GB10 (PyTorch / cuBLAS) | full square GEMM through the library, for the "as shipped" number |
 
 ## Results
 
@@ -17,6 +18,9 @@ FP16 dense, one GPU, no sparsity. Both are peaks over a parameter sweep, not ave
 |---|---|---|---|
 | Apple M5 Ultra, 80-core GPU | **128.5** | 32×32×128 | f16 in, f16 out, Metal tensor ops |
 | NVIDIA GB10 (DGX Spark), 48 SM | **105.3** | 16×16×16 tile, repeats | f16 in, f32 accumulate, SM clock 2.19 GHz |
+
+For comparison, a library GEMM on the same GB10 (cuBLAS via PyTorch, 16384³, 50 iterations)
+gives **99.4 TFLOPS**, i.e. 94% of the peak above. `dgx/measure_fp16.py` reproduces it.
 
 Raw runs: [`results/fp16-peak.csv`](results/fp16-peak.csv).
 
@@ -34,6 +38,12 @@ Apple side:
 ```bash
 swiftc -O main.swift matmul.swift metal_tools.swift tensor.swift -o peak
 ./peak            # writes mma.csv
+```
+
+Library GEMM (CUDA image with PyTorch):
+
+```bash
+python3 dgx/measure_fp16.py --iters 50 --warmup 15 --sizes 4096,8192,16384
 ```
 
 ## What this does and does not measure
