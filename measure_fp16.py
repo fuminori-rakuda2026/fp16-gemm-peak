@@ -9,9 +9,15 @@ for a sanity check. It times a square matrix multiply with the vendor's own libr
     python3 measure_fp16.py --sizes 4096,8192   # smaller run
     python3 measure_fp16.py --json              # machine-readable
 
-What it measures: dense FP16 GEMM, FP16 in / FP16 out, no sparsity, GPU time only
-(warmup excluded), FLOPs = 2*M*N*K. Times are a mean over --iters, plus the best
-single iteration. Both matter: the mean includes thermal throttling.
+What it measures: dense FP16 GEMM, FP16 in / FP16 out, no sparsity, FLOPs = 2*M*N*K.
+Each iteration is timed with a synchronise before and after, so the number includes the
+launch overhead of one call but not the queueing of the next. Times are a mean over
+--iters, plus the best single iteration. Both matter: the mean includes thermal throttling.
+
+Requires PyTorch. If `pip install torch` is refused by an externally managed Python,
+use a virtualenv:
+
+    python3 -m venv .venv && .venv/bin/pip install torch && .venv/bin/python measure_fp16.py
 
 Not measured: memory bandwidth, quantised formats, end-to-end model speed.
 """
@@ -25,7 +31,14 @@ import subprocess
 import sys
 import time
 
-import torch
+try:
+    import torch
+except ModuleNotFoundError:  # a first run should say what to do, not print a traceback
+    sys.exit(
+        "measure_fp16.py needs PyTorch.\n"
+        "  python3 -m venv .venv && .venv/bin/pip install torch\n"
+        "  .venv/bin/python measure_fp16.py --sizes 4096"
+    )
 
 
 def pick_device(want: str) -> torch.device:
@@ -42,7 +55,15 @@ def device_name(dev: torch.device) -> str:
     if dev.type == "cuda":
         return torch.cuda.get_device_name(dev)
     if dev.type == "mps":
-        return "Apple GPU (" + platform.machine() + ")"
+        chip = ""
+        try:
+            chip = subprocess.run(
+                ["sysctl", "-n", "machdep.cpu.brand_string"],
+                capture_output=True, text=True, timeout=5,
+            ).stdout.strip()
+        except Exception:
+            pass
+        return (chip or "Apple GPU") + " (" + platform.machine() + ")"
     return platform.processor() or "CPU"
 
 
