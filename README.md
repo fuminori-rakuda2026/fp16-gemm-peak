@@ -25,8 +25,8 @@ that the hardware's measured compute limit and the software's distance from it c
 | Apple M5 Ultra, 80-core GPU | FP32 accumulate | **125.7** | 16×32×128 |
 | Apple M5 Ultra, 80-core GPU | f16 output | **128.5** | 32×32×128 |
 
-Compare like with like: the two FP32-accumulate rows are the comparable pair (125.7 vs 105.3, the
-Apple part about 19% higher). The 128.5 row uses an f16 output path, and it is not established that
+Compare like with like: the two FP32-accumulate rows are the comparable pair (125.7 vs 105.3, so the
+M5 Ultra is about 19% higher). The 128.5 row uses an f16 output path, and it is not established that
 its accumulation is FP32, so it is listed separately rather than mixed in.
 
 Against each device's own ceiling (`units × FLOP per unit per clock × clock`):
