@@ -1,7 +1,27 @@
 # Why these numbers can be compared
 
+## The short version: a tap with the hose removed
+
+Open a tap fully, take the hose, the nozzle and the bucket off, and measure how much water leaves the
+tap per minute. That is the source's own maximum. Put the hose back and you get less — that is what an
+application sees, and it depends on the plumbing rather than on the tap.
+
+This repository measures the tap, not the plumbing:
+
+| Faucet | Here |
+|---|---|
+| Tap fully open | The matrix instruction issued back to back |
+| Hose and nozzle removed | Operands in registers, no DRAM traffic, no library overhead |
+| Litres per minute | TFLOPS, FLOPs = 2·M·N·K |
+| The tap's rated capacity | units × FLOP per unit per clock × clock |
+| Percentage of rated capacity | The achieved column |
+
+Two machines rarely have the same tap: one instruction covers 16×16×16, another 32×32×128. Reporting
+only litres per minute therefore mixes "how big the tap is" with "how well it was opened". Reporting the
+percentage of each tap's own rating separates the two — and that is the column to compare across vendors.
+
 A GPU comparison is only worth reading if you know what was held constant and what was not.
-This page states both, then gives the rule for adding another GPU.
+The rest of this page states both, then gives the rule for adding another GPU.
 
 ## 1. What is being compared
 

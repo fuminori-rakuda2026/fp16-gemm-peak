@@ -1,5 +1,12 @@
 # FP16 dense peak on GB10 and Apple GPUs
 
+Think of a tap turned fully open with the hose, the nozzle and the bucket removed: what you measure is
+the source's own maximum, not what a garden hose delivers at the far end. These harnesses do that to a
+GPU's matrix instruction — operands sit in registers, so memory bandwidth and library overhead are out
+of the picture — and then report both the litres per minute and the percentage of that device's own
+rated capacity. Two devices have different taps (one instruction covers 16×16×16, another 32×32×128),
+which is why the percentage column exists.
+
 Two standalone harnesses that measure the **FP16 dense** rate of the matrix instruction itself,
 on one GPU at a time. Operands stay in registers, so DRAM bandwidth does not decide the number,
 and every result is checked against a scalar reference before timing is trusted.
