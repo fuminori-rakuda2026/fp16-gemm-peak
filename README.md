@@ -1,5 +1,10 @@
 # FP16 dense peak on GB10 and Apple GPUs
 
+> **A tap turned fully open, with the hose, the nozzle and the bucket taken off.** What comes out is
+> the water source's own maximum — not what a garden hose delivers at the far end. This repository
+> does that to a GPU's matrix instruction, and reports both the litres per minute and the percentage
+> of each tap's rated capacity.
+
 **Purpose.** Measure how fast a GPU's matrix instruction can retire, on one GPU at a time, so that a
 number can be read as *hardware capability* rather than as the quality of a model, an engine or a
 quantisation recipe.
@@ -7,10 +12,8 @@ quantisation recipe.
 **Method, in one paragraph.** Take the same mathematical operation on every device — dense FP16
 matrix multiply, FP32 accumulate, no sparsity — keep the operands in registers so DRAM never decides
 the result, repeat it on the GPU, check the output against a CPU reference, and only then divide
-FLOPs by time. That is a tap turned fully open with the hose removed — the source's own maximum, not
-what the hose delivers at the far end. Two devices rarely have the same tap (one instruction covers
-16×16×16, another 32×32×128), so results are also given as a percentage of each device's own rated
-ceiling.
+FLOPs by time. Two devices rarely have the same tap (one instruction covers 16×16×16, another
+32×32×128), which is why results are also given as a percentage of each device's own rated ceiling.
 
 **Why this shape.** A library GEMM number mixes the silicon with the library, and a tokens-per-second
 number mixes it with the model. Both are useful and both are measured elsewhere; this repository
