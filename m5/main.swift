@@ -35,13 +35,19 @@ do {
     ]
     
     // matrix shapes to run
-    let shapes = [8, 16, 32].flatMap {m in
+    var shapes = [8, 16, 32].flatMap {m in
         [8, 16, 32].flatMap {n in
             [8, 16, 32, 64, 128].map {k in
                 (m, n, k)
             }
         }
     }
+    let env = ProcessInfo.processInfo.environment
+    if let only = env["M5_ONLY"] {
+        let v = only.split(separator: ",").compactMap { Int($0) }
+        if v.count == 3 { shapes = [(v[0], v[1], v[2])] }
+    }
+    let runs = max(1, Int(env["M5_RUNS"] ?? "1") ?? 1)
         
     for (in_type, out_type) in input_output {
         for (m, n, k) in shapes {
@@ -49,6 +55,7 @@ do {
             
             
             print("=== \(fn)")
+            for run in 1...runs {
             do {
                 let tops = try mma_bench(env: metal_env, M: m, N: n, K: k, input: in_type, output: out_type, repeat: 30)
                 tops.forEach { tops in
@@ -77,6 +84,8 @@ do {
                 results.append(row: in_type.label, out_type.label, m, n, k, Double.nan)
             }
             
+            print("--- run \(run) done")
+            }
             let _ = try! results.writeCSV(toDocuments: "mma.csv")
         }
     }

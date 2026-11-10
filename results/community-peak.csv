@@ -1,0 +1,6 @@
+# Peak reports from other people's hardware, accepted as reported, not reproduced by the maintainer.
+# Protocol: 25 samples = 5 fresh processes x 5 samples, median is the headline; correctness PASS.
+device,sm_count,median_tflops,mean_tflops,best_tflops,min_tflops,std_tflops,samples,harness,harness_commit,arch,geometry,clock_context_mhz,reported_in,date
+rtx-pro-5000-72gb-blackwell,110,291.45,291.4532,291.53,291.41,0.02968,25,dgx/gemm_peak.cu,2fc58ca,sm_120,"65536 1760 256",2587,issue#1,2026-11-09
+rtx-pro-4500-blackwell,82,238.74,238.6932,238.91,238.00,0.18006,25,dgx/gemm_peak.cu,2fc58ca,sm_120,"65536 164 128",2827,issue#1,2026-11-09
+geforce-rtx-5070-ti,70,107.47,107.4672,107.48,107.46,0.00614,25,dgx/gemm_peak.cu,2fc58ca,sm_120,"65536 1120 512",3000,issue#1,2026-11-09

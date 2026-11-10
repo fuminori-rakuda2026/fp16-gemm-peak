@@ -40,8 +40,12 @@ the most common way a comparison goes wrong, so the tables here keep them apart.
 5. **Correctness before speed**: every peak run checks its output against a scalar or CPU reference
    and reports the error. A number is not reported when the check fails.
 6. **Same arithmetic for the score**: FLOPs = 2·M·N·K, no per-vendor adjustments.
-7. **Warmup excluded, same statistics**: warmup iterations are dropped, then mean and best are both
-   reported. The mean includes thermal throttling; the best is the burst rate.
+7. **Warmup excluded, same statistics**: warmup iterations are dropped, then the median, mean, best,
+   minimum and standard deviation are reported. The **median is the headline number**, taken over at
+   least 25 samples from five fresh processes (five samples each as the floor). A harness that emits
+   more timing samples per invocation may exceed that; what must not vary is the number of fresh
+   processes and the fact that every sample enters the median. The best is the burst rate and is never
+   used for a cross-device comparison on its own.
 
 ## 3. What necessarily differs, and why that is acceptable
 
@@ -75,10 +79,21 @@ rest on measurements of the same kind. What is still documentation rather than m
 FLOPs-per-core-per-clock figure, and it is the same number on both rows; if it is wrong, it is wrong
 for both.
 
+### The per-clock coefficient is per GPU, not a constant
+
+`flop_per_unit_per_clock` is not 1024 everywhere. On current NVIDIA parts the FP32-accumulate rate
+depends on the product line: the RTX 5070 Ti is rated at 87.9 TFLOPS for FP16-in/FP32-accumulate at
+its 2.452 GHz boost clock, which is 512 FLOPs per SM per clock, not 1024. Scaled to the 3.0 GHz
+observed during the reported run, that predicts 107.5 TFLOPS against a measured 107.47.
+
+So a row's ceiling must name the accumulator and use that product's own published rate. Applying 1024
+to every GPU would show the 5070 Ti at about 50% of a ceiling it actually meets. The GB10 and M5 Ultra
+rows above still use 1024, and that figure remains documentation, not measurement, for both.
+
 Every row in [`results/ceiling.csv`](../results/ceiling.csv) carries the clock value **and where it
 came from**. A row whose clock was not measured is marked `estimated`, and its achieved rate is
-correspondingly weaker evidence. The Apple row is currently of that kind: Apple publishes neither
-the matrix rate nor the GPU clock.
+correspondingly weaker evidence. No current row is of that kind: both clocks are measured under load,
+while the 1024 FLOPs/SM/clock figure remains documentation on both.
 
 ## 5. What would make a comparison unfair
 
@@ -87,7 +102,8 @@ Use this as a checklist before adding a row:
 - [ ] Sparse and dense results in the same column
 - [ ] FP4/FP8/INT8 mixed with FP16 (different scale formats, different arithmetic)
 - [ ] A peak measured at 4096³ compared with a library number at 128³
-- [ ] Best-of-N on one device and mean on another
+- [ ] Best-of-N on one device and median on another
+- [ ] One per-clock coefficient (1024) assumed for every GPU and accumulator
 - [ ] A ceiling taken from a vendor AI-TOPS figure that assumes sparsity
 - [ ] A clock that was neither measured nor labelled estimated
 - [ ] Thermal throttling hidden by reporting only the burst value
@@ -102,18 +118,33 @@ Use this as a checklist before adding a row:
 4. Open an issue with the block, or a PR that appends the row. Mark `estimated` anything you did not
    measure directly.
 
+For a **peak** report (a vendor-specific harness rather than `measure_fp16.py`), the acceptance bar is
+higher, because the number depends on the kernel as much as on the GPU:
+
+- the harness commit and the architecture flag you built with;
+- the launch geometry and how it was chosen;
+- how many samples, from how many fresh processes, and the median plus its spread;
+- the correctness check and its result, including after the long repetition loop;
+- the clock sampled during the run, labelled as context if it is not per-sample.
+
+Reports that meet this bar are listed in the README as community-reported and not independently
+reproduced by the maintainer. The maintainer's own rows use the same protocol, but a reporter's
+statistics are their own, so the two are kept in separate tables.
+
 ## 7. Known weaknesses of the current data
 
 - The Apple clock is measured, not assumed: `powermetrics --samplers gpu_power` reports 1617–1619 MHz
-  while the harness runs, so the ceiling is 132.5 and the achieved rates are 94.8% (FP32 accumulate)
-  and 97.0% (f16 output). An earlier revision of this page used an assumed 1.57 GHz; the measurement
+  while the harness runs, so the ceiling is 132.5 and the achieved rates are 94.6% (FP32 accumulate)
+  and 96.8% (f16 output). An earlier revision of this page used an assumed 1.57 GHz; the measurement
   moved that device's ceiling up by 3% and its achieved rate down.
 - The per-clock rate of 1024 FLOPs per core is still documentation, not measurement. It is the same
   assumption on both devices, but it is an assumption.
 - It is **not established** that the Apple f16-output path accumulates in FP32. That is why the
-  comparable pair is the two FP32-accumulate rows (125.7 vs 105.3), and the f16-output row is reported
+  comparable pair is the two FP32-accumulate rows (125.3 vs 107.7), and the f16-output row is reported
   on its own.
 - The CUDA peak checks correctness at `repeats=1` (one tile), not after the long repetition loop.
+- The GB10 and M5 Ultra medians were re-measured on 2026-11-10 with 25 and 750 samples respectively;
+  the earlier table reported the best sample, so the published numbers moved slightly downward.
 - Only two devices have a measured peak. The other rows in the README table are derived values,
   labelled as such.
 - No power or energy numbers. A rate per watt would change the ranking, and it is not measured here.

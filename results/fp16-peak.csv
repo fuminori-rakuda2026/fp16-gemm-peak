@@ -4,3 +4,9 @@
 apple-m5-ultra-80core,f16,f16,32,32,128,128.53,sweep peak (8..32 x 8..32 x 8..128)
 apple-m5-ultra-80core,f16,f32,16,32,128,125.70,sweep peak
 gb10-48sm,f16,f32,16,16,16,105.27,fixed tile repeated; sample peaks 105.11 / 105.10 / 105.27
+# 2026-11-10 re-measurement, median protocol (25 samples on GB10, 750 on each M5 Ultra)
+gb10-48sm,f16,f32,16,16,16,107.74,median n=25 (5 processes x 5); clock 2190 MHz during run
+apple-m5-ultra-80core,f16,f32,16,32,128,125.32,median n=750 (5 processes x 5 x 30); clock 1.618 GHz (2026-11-07)
+apple-m5-ultra-80core,f16,f16,32,32,128,128.19,median n=750; f16 output path, accumulation not established
+apple-m5-ultra-64core,f16,f32,16,32,128,100.50,median n=750; 64-core GPU
+apple-m5-ultra-64core,f16,f16,32,32,128,102.83,median n=750; f16 output path
