@@ -6,5 +6,5 @@ device,units,flop_per_unit_per_clock,clock_ghz,clock_source,ceiling_tflops,outpu
 gb10-48sm,48,1024,2.190,"nvidia-smi: 2190 MHz throughout the 2026-11-10 run (cap 2200)",107.6,fp32_accumulate,107.74,100.1
 apple-m5-ultra-80core,80,1024,1.618,"powermetrics: 1617-1619 MHz under load",132.5,fp32_accumulate,125.32,94.6
 apple-m5-ultra-80core,80,1024,1.618,"powermetrics: 1617-1619 MHz under load",132.5,f16_output,128.19,96.8
-apple-m5-ultra-64core,64,1024,1.618,"powermetrics: 1617-1619 MHz under load (same GPU family)",106.0,fp32_accumulate,100.50,94.8
-apple-m5-ultra-64core,64,1024,1.618,"powermetrics: 1617-1619 MHz under load (same GPU family)",106.0,f16_output,102.83,97.0
+apple-m5-ultra-64core,64,1024,1.618,"assumed from the 80-core unit; not measured on this GPU",106.0,fp32_accumulate,100.50,94.8
+apple-m5-ultra-64core,64,1024,1.618,"assumed from the 80-core unit; not measured on this GPU",106.0,f16_output,102.83,97.0

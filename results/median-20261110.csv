@@ -1,0 +1,6 @@
+device,shape,output,samples,median_tflops,mean_tflops,best_tflops,min_tflops,std_tflops
+apple-m5-ultra-64core,16x32x128,f16,750,99.82,99.73,99.98,94.25,0.34
+apple-m5-ultra-64core,16x32x128,f32,750,100.50,100.45,100.62,93.59,0.29
+apple-m5-ultra-80core,16x32x128,f16,750,124.27,124.03,124.62,121.49,0.52
+apple-m5-ultra-80core,16x32x128,f32,750,125.32,125.13,125.70,122.44,0.49
+gb10-48sm,16x16x16,f32,25,107.74,107.74,107.74,107.73,0.00

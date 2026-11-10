@@ -19,66 +19,69 @@ that the hardware's measured compute limit and the software's distance from it c
 
 ## Results
 
+Measured 2026-11-10.
+
 | Device | Output / accumulator | TFLOPS | Best shape |
 |---|---|---|---|
 | NVIDIA GB10 (DGX Spark class), 48 SM | FP32 accumulate | **107.7** | 16×16×16 tile, repeats |
 | Apple M5 Ultra, 80-core GPU | FP32 accumulate | **125.3** | 16×32×128 |
 | Apple M5 Ultra, 80-core GPU | f16 output | **128.2** | 32×32×128 |
 | Apple M5 Ultra, 64-core GPU | FP32 accumulate | **100.5** | 16×32×128 |
+| Apple M5 Ultra, 64-core GPU | f16 output | **102.8** | 32×32×128 |
 
-All four rows are medians measured on 2026-11-10: 25 samples on the GB10 (5 fresh processes ×
-5 samples) and 750 samples on each M5 Ultra (5 fresh processes × 5 repeats × 30 timing samples; the
-Metal harness prints one number per timing sample, so 25 is a floor rather than a target). The
-earlier table listed the best sample; the medians are 2.4 TFLOPS higher on the GB10 and 0.3–0.4 lower
-on the M5 Ultra, which is why the numbers moved.
+These are medians, not the fastest sample. The GB10 ran 25 samples in five separate processes.
+Each M5 ran 750, because the Metal harness prints 30 timings per run; the 25-sample rule is a floor,
+not a target. The earlier table used the best sample, so the GB10 moved up (105.3 to 107.7) and the
+M5 rows moved down slightly.
 
-Compare like with like: the FP32-accumulate rows are the comparable pair (125.3 vs 107.7, so the
-M5 Ultra is about 16% higher). The f16-output rows use an f16 output path, and it is not established
-that their accumulation is FP32, so they are listed separately rather than mixed in.
+The comparable pair is the two FP32-accumulate rows: 125.3 against 107.7, so the M5 Ultra is about
+16% higher. The f16-output rows stay separate because it is not established that their accumulation
+is FP32.
 
-Against each device's own ceiling (`units × FLOP per unit per clock × clock`):
+Against each device's own nominal ceiling:
 
 | Device | Output | Ceiling | Measured | Achieved | Clock |
 |---|---|---|---|---|---|
-| GB10, 48 SM | FP32 acc | 107.6 | 107.7 | 100.1% | 2.190 GHz, measured during the run |
-| M5 Ultra, 80-core | FP32 acc | 132.5 | 125.3 | 94.6% | 1.618 GHz, measured under load |
-| M5 Ultra, 80-core | f16 out | 132.5 | 128.2 | 96.8% | 1.618 GHz, measured under load |
-| M5 Ultra, 64-core | FP32 acc | 106.0 | 100.5 | 94.8% | 1.618 GHz, measured under load |
-| M5 Ultra, 64-core | f16 out | 106.0 | 102.8 | 97.0% | 1.618 GHz, measured under load |
+| GB10, 48 SM | FP32 acc | 107.6 | 107.7 | 100.1% | 2.190 GHz, measured |
+| M5 Ultra, 80-core | FP32 acc | 132.5 | 125.3 | 94.6% | 1.618 GHz, measured |
+| M5 Ultra, 80-core | f16 out | 132.5 | 128.2 | 96.8% | 1.618 GHz, measured |
+| M5 Ultra, 64-core | FP32 acc | 106.0 | 100.5 | 94.8% (est.) | 1.618 GHz, from the 80-core |
+| M5 Ultra, 64-core | f16 out | 106.0 | 102.8 | 97.0% (est.) | 1.618 GHz, from the 80-core |
 
-The GB10 row sits 0.09% above its nominal ceiling. This is not display rounding: the excess reflects
-uncertainty in the ceiling itself (a 1024 FLOPs/SM/clock figure taken from documentation, and clock
-sampled at 250 ms rather than per sample), so read it as "at the nominal estimate", not as proof that
-the hardware exceeds its rating.
+The GB10 reads 100.1%, a hair above its nominal ceiling. The small excess is consistent with
+uncertainty in the ceiling itself: 1024 FLOPs per SM per clock is documentation, and the clock is
+sampled every 250 ms rather than per sample. Read it as "at the estimate", not as proof that the
+hardware beats its rating. The two 64-core achieved figures are estimates because their clock was
+borrowed from the 80-core unit.
 
 Both GPU clocks were measured under load, not taken from a data sheet: clock reporting through the
-driver on the GB10, and `powermetrics --samplers gpu_power` on the M5 Ultra (1617–1619 MHz). The one number still taken from documentation rather than measured is 1024 FLOPs per core per
-clock, on the GB10 and M5 rows — so read the achieved column as "consistent with the published rate",
-not as a proof of it. Raw runs: [`results/fp16-peak.csv`](results/fp16-peak.csv),
-[`results/ceiling.csv`](results/ceiling.csv).
+driver on the GB10, and `powermetrics --samplers gpu_power` on the M5 Ultra (1617–1619 MHz). The one
+number still taken from documentation is 1024 FLOPs per core per clock, so read the achieved column
+as "consistent with the published rate", not as a proof of it. Raw runs:
+[`results/fp16-peak.csv`](results/fp16-peak.csv), [`results/ceiling.csv`](results/ceiling.csv),
+[`results/median-20261110.csv`](results/median-20261110.csv),
+[`results/samples-20261110.csv`](results/samples-20261110.csv).
 
-### Community-reported results — not independently reproduced by the maintainer
+### Community results, not independently reproduced
 
-These come from [Issue #1](https://github.com/fuminori-rakuda2026/fp16-gemm-peak/issues/1), measured
-by the reporter on their own machines with the unmodified `dgx/gemm_peak.cu` (commit `2fc58ca`,
-`-arch=sm_120`, CUDA 13.0). They are medians of 25 samples from five fresh processes, with the
-correctness check passing. They are listed apart from the table above because the maintainer has not
-run them, and because the statistical protocol is the reporter's own: treat them as a careful report,
-not as an independent reproduction or as a like-for-like run of the same lab procedure.
+[Issue #1](https://github.com/fuminori-rakuda2026/fp16-gemm-peak/issues/1) reports three NVIDIA GPUs,
+measured by the reporter with the unmodified `dgx/gemm_peak.cu` (commit `2fc58ca`, `-arch=sm_120`,
+CUDA 13.0).
 
-| GPU | SMs | Median TFLOPS | Mean | Best | Min | Std | Clock context |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| RTX PRO 5000 72GB Blackwell | 110 | **291.45** | 291.45 | 291.53 | 291.41 | 0.030 | 2587 MHz median |
-| RTX PRO 4500 Blackwell | 82 | **238.74** | 238.69 | 238.91 | 238.00 | 0.180 | 2827 MHz median |
-| GeForce RTX 5070 Ti | 70 | **107.47** | 107.47 | 107.48 | 107.46 | 0.006 | 3000 MHz median |
+| GPU | SMs | Median TFLOPS | Best |
+|---|---:|---:|---:|
+| RTX PRO 5000 72GB Blackwell | 110 | 291.45 | 291.53 |
+| RTX PRO 4500 Blackwell | 82 | 238.74 | 238.91 |
+| GeForce RTX 5070 Ti | 70 | 107.47 | 107.48 |
 
-The clock figures are context sampled during the runs, not per-sample clocks. Raw rows:
-[`results/community-peak.csv`](results/community-peak.csv).
+Each row is the median of 25 samples from five fresh processes, with the correctness check passing.
+These are the reporter's statistics, on the reporter's machines. The maintainer has not run them, so
+they stay out of the table above.
 
-The 5070 Ti is the interesting row: 107.5 TFLOPS is about 100% of NVIDIA's published 87.9 TFLOPS
-FP32-accumulate figure once its 2.452 GHz rating is scaled to the 3.0 GHz observed here. That says the
-FP32-accumulate rate per SM per clock is **not** 1024 on that part; see
-[`docs/FAIRNESS.md` §4](docs/FAIRNESS.md).
+The 5070 Ti is the interesting one. NVIDIA rates it at 87.9 TFLOPS for FP16 input with FP32
+accumulation at 2.452 GHz. Scaled to the 3.0 GHz seen during the run, that is about 107.5 TFLOPS,
+which matches the measurement. The per-SM rate on that card is therefore 512 FLOPs per clock, not
+1024; see [`docs/FAIRNESS.md` §4](docs/FAIRNESS.md).
 
 A normal library call on the same GB10 (cuBLAS via PyTorch, 16384³, 50 iterations) gives **99.4
 TFLOPS**, approximately 94% of the measured peak — the kind of gap the peak exists to expose.
@@ -109,8 +112,9 @@ one architecture's instruction and must be adapted before it will build or mean 
 ```bash
 nvcc -O3 -std=c++17 -arch=sm_121 dgx/gemm_peak.cu -o gemm_peak && ./gemm_peak <repeats> <blocks> <threads>
 swiftc -O m5/main.swift m5/matmul.swift m5/metal_tools.swift m5/tensor.swift -o peak && ./peak
-# one shape, five repeats, for the 25-sample protocol:
-M5_ONLY=32,32,128 M5_RUNS=5 ./peak
+# For the median protocol, run one shape in five separate processes.
+# FP32 output is fastest at 16,32,128; f16 output at 32,32,128.
+for i in 1 2 3 4 5; do M5_ONLY=16,32,128 M5_RUNS=5 ./peak >> m5-runs.txt; done
 python3 dgx/measure_fp16.py --iters 50 --warmup 15 --sizes 4096,8192,16384
 ```
 
