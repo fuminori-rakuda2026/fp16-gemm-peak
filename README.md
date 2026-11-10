@@ -29,14 +29,12 @@ Measured 2026-11-10.
 | Apple M5 Ultra, 64-core GPU | FP32 accumulate | **100.5** | 16×32×128 |
 | Apple M5 Ultra, 64-core GPU | f16 output | **102.8** | 32×32×128 |
 
-These are medians, not the fastest sample. The GB10 ran 25 samples in five separate processes.
-Each M5 ran 750, because the Metal harness prints 30 timings per run; the 25-sample rule is a floor,
-not a target. The earlier table used the best sample, so the GB10 moved up (105.3 to 107.7) and the
-M5 rows moved down slightly.
+Results are medians from 2026-11-10. The GB10 was measured across 25 samples and each M5 Ultra across
+750; the full statistics and raw samples are in the results directory.
 
-The comparable pair is the two FP32-accumulate rows: 125.3 against 107.7, so the M5 Ultra is about
-16% higher. The f16-output rows stay separate because it is not established that their accumulation
-is FP32.
+For FP32 accumulation, the 80-core M5 Ultra reaches 125.3 TFLOPS against 107.7 on the GB10, about
+16% higher. The 64-core M5 Ultra reaches 100.5. The f16-output rows stay separate because it is not
+established that their accumulation is FP32.
 
 Against each device's own nominal ceiling:
 
@@ -74,9 +72,8 @@ CUDA 13.0).
 | RTX PRO 4500 Blackwell | 82 | 238.74 | 238.91 |
 | GeForce RTX 5070 Ti | 70 | 107.47 | 107.48 |
 
-Each row is the median of 25 samples from five fresh processes, with the correctness check passing.
-These are the reporter's statistics, on the reporter's machines. The maintainer has not run them, so
-they stay out of the table above.
+The contributor ran 25 samples per GPU across five separate processes, with the correctness check
+passing.
 
 The 5070 Ti is the interesting one. NVIDIA rates it at 87.9 TFLOPS for FP16 input with FP32
 accumulation at 2.452 GHz. Scaled to the 3.0 GHz seen during the run, that is about 107.5 TFLOPS,

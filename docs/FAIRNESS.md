@@ -40,10 +40,9 @@ the most common way a comparison goes wrong, so the tables here keep them apart.
 5. **Correctness before speed**: every peak run checks its output against a scalar or CPU reference
    and reports the error. A number is not reported when the check fails.
 6. **Same arithmetic for the score**: FLOPs = 2·M·N·K, no per-vendor adjustments.
-7. **Warmup excluded, same statistics**: warmup iterations are dropped. The **median is the headline
-   number**, from at least 25 samples in five fresh processes; a harness that prints more samples per
-   run may exceed that. Mean, best, minimum and standard deviation are reported alongside. The best is
-   a burst rate and is not used for a cross-device comparison on its own.
+7. **Warmup excluded, same statistics**: after warm-up, the **median** of at least 25 samples across
+   five separate processes is the headline. The spread and the fastest sample are reported too, but
+   the fastest is not used to rank GPUs.
 
 ## 3. What necessarily differs, and why that is acceptable
 
@@ -73,9 +72,8 @@ The formula is identical for every vendor; only the three inputs change. Two con
   number. 98% on one device and 74% on another is a meaningful statement about each device.
 
 **Same normalization formula.** The GB10 and M5 clocks were measured under load, so their achieved
-rates rest on measurements of the same kind. What is still documentation rather than measurement is
-the FLOPs-per-core-per-clock figure, and it is the same number on every row; if it is wrong, it is
-wrong everywhere.
+rates rest on measurements of the same kind. The ceiling uses the same formula for every GPU, but
+the FLOPs-per-clock figure depends on the hardware and has to be checked for each model.
 
 ### The per-clock coefficient is per GPU, not a constant
 
